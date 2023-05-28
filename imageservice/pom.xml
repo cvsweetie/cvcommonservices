@@ -11,30 +11,47 @@
 
     <groupId>com.udacity.commonservices</groupId>
     <artifactId>imageservice</artifactId>
+    <packaging>jar</packaging>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-<dependencies>
-    <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
-        <version>2.0.7</version>
-    </dependency>
+
+    <dependencies>
+        <dependency>
+             <groupId>org.slf4j</groupId>
+             <artifactId>slf4j-api</artifactId>
+             <version>2.0.7</version>
+        </dependency>
     <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/auth -->
-    <dependency>
-        <groupId>software.amazon.awssdk</groupId>
-        <artifactId>auth</artifactId>
-        <version>2.20.69</version>
-    </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>auth</artifactId>
+            <version>2.20.69</version>
+        </dependency>
     <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/rekognition -->
-    <dependency>
-        <groupId>software.amazon.awssdk</groupId>
-        <artifactId>rekognition</artifactId>
-        <version>2.20.69</version>
-    </dependency>
-</dependencies>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>rekognition</artifactId>
+            <version>2.20.69</version>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.mockito</groupId>-->
+<!--            <artifactId>mockito-junit-jupiter</artifactId>-->
+<!--            <version>5.2.0</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.mockito</groupId>-->
+<!--            <artifactId>mockito-junit-jupiter</artifactId>-->
+<!--            <version>5.2.0</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.mockito</groupId>-->
+<!--            <artifactId>mockito-junit-jupiter</artifactId>-->
+<!--            <version>5.2.0</version>-->
+<!--        </dependency>-->
+    </dependencies>
 
 </project>

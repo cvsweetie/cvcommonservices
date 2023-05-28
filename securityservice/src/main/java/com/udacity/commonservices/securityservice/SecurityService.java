@@ -1,14 +1,10 @@
 package com.udacity.commonservices.securityservice;
-
-
-
-import com.udacity.commonservices.imageservice.FakeImageService;
+import com.udacity.commonservices.imageservice.ImageService;
 import com.udacity.commonservices.securityservice.application.StatusListener;
 import com.udacity.commonservices.securityservice.data.AlarmStatus;
 import com.udacity.commonservices.securityservice.data.ArmingStatus;
 import com.udacity.commonservices.securityservice.data.SecurityRepository;
 import com.udacity.commonservices.securityservice.data.Sensor;
-
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,13 +18,38 @@ import java.util.Set;
  */
 public class SecurityService {
 
-    private FakeImageService imageService;
+    // private FakeImageService imageService;
+    private ImageService imageService;
     private SecurityRepository securityRepository;
     private Set<StatusListener> statusListeners = new HashSet<>();
 
-    public SecurityService(SecurityRepository securityRepository, FakeImageService imageService) {
+    public SecurityService(SecurityRepository securityRepository, ImageService imageService) {
         this.securityRepository = securityRepository;
         this.imageService = imageService;
+    }
+
+    public ImageService getImageService() {
+        return imageService;
+    }
+
+    public void setImageService(ImageService imageService) {
+        this.imageService = imageService;
+    }
+
+    public SecurityRepository getSecurityRepository() {
+        return securityRepository;
+    }
+
+    public void setSecurityRepository(SecurityRepository securityRepository) {
+        this.securityRepository = securityRepository;
+    }
+
+    public Set<StatusListener> getStatusListeners() {
+        return statusListeners;
+    }
+
+    public void setStatusListeners(Set<StatusListener> statusListeners) {
+        this.statusListeners = statusListeners;
     }
 
     /**
@@ -48,7 +69,7 @@ public class SecurityService {
      * the camera currently shows a cat.
      * @param cat True if a cat is detected, otherwise false.
      */
-    private void catDetected(Boolean cat) {
+    public void catDetected(Boolean cat) {
         if(cat && getArmingStatus() == ArmingStatus.ARMED_HOME) {
             setAlarmStatus(AlarmStatus.ALARM);
         } else {

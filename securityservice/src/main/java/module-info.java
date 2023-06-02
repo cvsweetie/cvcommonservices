@@ -12,5 +12,5 @@ module com.udacity.commonservices.securityservice {
     requires  org.mockito.junit.jupiter;
     requires  org.junit.jupiter.params;
 
-    opens org.junit.platform.commons.util to org.junit.platform.engine;
+//    opens org.junit.platform.commons.util to org.junit.platform.engine;
 }

@@ -8,6 +8,7 @@ import com.udacity.commonservices.securityservice.data.Sensor;
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * Service that receives information about changes to the security system. Responsible for
@@ -17,8 +18,6 @@ import java.util.Set;
  * class you will be writing unit tests for.
  */
 public class SecurityService {
-
-    // private FakeImageService imageService;
     private ImageService imageService;
     private SecurityRepository securityRepository;
     private Set<StatusListener> statusListeners = new HashSet<>();
@@ -28,29 +27,34 @@ public class SecurityService {
         this.imageService = imageService;
     }
 
-    public ImageService getImageService() {
-        return imageService;
-    }
+//  Commented out as the method is unused and not correct in returning a parameter for this service
+//    public ImageService getImageService() {
+//        return imageService;
+//    }
 
-    public void setImageService(ImageService imageService) {
-        this.imageService = imageService;
-    }
+//  Commented out as the method is unused and not correct in setting parameter used to create this service instance
+//    public void setImageService(ImageService imageService) {
+//        this.imageService = imageService;
+//    }
 
-    public SecurityRepository getSecurityRepository() {
-        return securityRepository;
-    }
+//   Service should safely handle changes. Repo should not be exposed to external consumer. Method not used anyway.
+//    public SecurityRepository getSecurityRepository() {
+//        return securityRepository;
+//    }
+//   Service should safely handle changes. Repo should not be exposed to external consumer. Method not used anyway.
+//    public void setSecurityRepository(SecurityRepository securityRepository) {
+//        this.securityRepository = securityRepository;
+//    }
 
-    public void setSecurityRepository(SecurityRepository securityRepository) {
-        this.securityRepository = securityRepository;
-    }
 
-    public Set<StatusListener> getStatusListeners() {
-        return statusListeners;
-    }
-
-    public void setStatusListeners(Set<StatusListener> statusListeners) {
-        this.statusListeners = statusListeners;
-    }
+//    Status changes should be handled safely by this service
+//    public Set<StatusListener> getStatusListeners() {
+//        return statusListeners;
+//    }
+//
+//    public void setStatusListeners(Set<StatusListener> statusListeners) {
+//        this.statusListeners = statusListeners;
+//    }
 
     /**
      * Sets the current arming status for the system. Changing the arming status
@@ -60,6 +64,13 @@ public class SecurityService {
     public void setArmingStatus(ArmingStatus armingStatus) {
         if(armingStatus == ArmingStatus.DISARMED) {
             setAlarmStatus(AlarmStatus.NO_ALARM);
+        }
+        // If armingStatus is ARMED, set all sensors inactive
+        if(armingStatus == ArmingStatus.ARMED_HOME || armingStatus == ArmingStatus.ARMED_AWAY) {
+            ConcurrentSkipListSet<Sensor> safeSensors =  new ConcurrentSkipListSet<>(this.getSensors());
+            safeSensors.stream().forEach(s -> {
+                this.changeSensorActivationStatus(s, false);
+            });
         }
         securityRepository.setArmingStatus(armingStatus);
     }
@@ -75,7 +86,6 @@ public class SecurityService {
         } else {
             setAlarmStatus(AlarmStatus.NO_ALARM);
         }
-
         statusListeners.forEach(sl -> sl.catDetected(cat));
     }
 
@@ -110,6 +120,7 @@ public class SecurityService {
         switch(securityRepository.getAlarmStatus()) {
             case NO_ALARM -> setAlarmStatus(AlarmStatus.PENDING_ALARM);
             case PENDING_ALARM -> setAlarmStatus(AlarmStatus.ALARM);
+            default -> setAlarmStatus(AlarmStatus.NO_ALARM);
         }
     }
 
@@ -118,8 +129,8 @@ public class SecurityService {
      */
     private void handleSensorDeactivated() {
         switch(securityRepository.getAlarmStatus()) {
-            case PENDING_ALARM -> setAlarmStatus(AlarmStatus.NO_ALARM);
             case ALARM -> setAlarmStatus(AlarmStatus.PENDING_ALARM);
+            default -> setAlarmStatus(AlarmStatus.NO_ALARM);
         }
     }
 

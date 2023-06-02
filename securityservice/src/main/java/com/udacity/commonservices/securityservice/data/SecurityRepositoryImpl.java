@@ -41,7 +41,7 @@ public class SecurityRepositoryImpl implements SecurityRepository {
 
     @Override
     public Set<Sensor> getSensors() {
-        return sensors;
+        return new HashSet<>(sensors);
     }
 
     @Override

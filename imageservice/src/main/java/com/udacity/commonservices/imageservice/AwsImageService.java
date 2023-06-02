@@ -8,6 +8,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.rekognition.RekognitionClient;
+import software.amazon.awssdk.services.rekognition.RekognitionClientBuilder;
 import software.amazon.awssdk.services.rekognition.model.DetectLabelsRequest;
 import software.amazon.awssdk.services.rekognition.model.DetectLabelsResponse;
 import software.amazon.awssdk.services.rekognition.model.Image;
@@ -36,9 +37,7 @@ import java.util.stream.Collectors;
 public class AwsImageService implements ImageService{
 
     private Logger log = LoggerFactory.getLogger(AwsImageService.class);
-
-    //aws recommendation is to maintain only a single instance of client objects
-    private static RekognitionClient rekognitionClient;
+    private static volatile RekognitionClient rekognitionClient;
 
     public AwsImageService() {
         Properties props = new Properties();
@@ -52,9 +51,9 @@ public class AwsImageService implements ImageService{
         String awsId = props.getProperty("aws.id");
         String awsSecret = props.getProperty("aws.secret");
         String awsRegion = props.getProperty("aws.region");
-
         AwsCredentials awsCredentials = AwsBasicCredentials.create(awsId, awsSecret);
-        rekognitionClient = RekognitionClient.builder()
+
+        AwsImageService.rekognitionClient = RekognitionClient.builder()
                 .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
                 .region(Region.of(awsRegion))
                 .build();

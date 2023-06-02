@@ -7,11 +7,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.*;
-
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import software.amazon.awssdk.services.rekognition.endpoints.internal.Value;
 
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
@@ -19,19 +19,15 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 
 class SecurityServiceTest {
     @Mock
     private ImageService imageService;
-
     @Mock
     private SecurityRepository securityRepository;
-
     private SecurityService securityService;
-
     Set<Sensor> sensors;
 
     @BeforeEach
@@ -99,12 +95,9 @@ class SecurityServiceTest {
        Sensor sensorToActivate = (Sensor) (sensors.stream().toArray())[0];
        sensorToActivate.setActive(true);
        securityService.changeSensorActivationStatus(sensorToActivate, false);
-
        ArgumentCaptor<AlarmStatus> captor = ArgumentCaptor.forClass(AlarmStatus.class);
        verify(securityRepository, atMost(1)).setAlarmStatus(captor.capture());
-
        assertEquals(captor.getValue(), AlarmStatus.NO_ALARM);
-
     }
 
     /**
@@ -119,7 +112,6 @@ class SecurityServiceTest {
         securityService.setAlarmStatus(AlarmStatus.ALARM);
         securityService.changeSensorActivationStatus(sensorToActivate, active);
         assertEquals(securityService.getAlarmStatus(), AlarmStatus.ALARM);
-
         sensorToActivate.setActive(true);
         securityService.changeSensorActivationStatus(sensorToActivate, active);
         assertEquals(securityService.getAlarmStatus(), AlarmStatus.ALARM);
@@ -148,11 +140,11 @@ class SecurityServiceTest {
         verify(securityRepository,times(0)).setAlarmStatus(any());
     }
     /**
-     * If the image service identifies an image containing a cat while the system is armed-home,
+     * 7. If the image service identifies an image containing a cat while the system is armed-home,
      * put the system into alarm status.
      */
     @Test
-    void whenImage_identifiedas_cat_then_alarmStatus() {
+    void whenImage_IdentifiedAs_Cat_Then_AlarmStatus() {
         when (securityRepository.getArmingStatus()).thenReturn(ArmingStatus.ARMED_HOME);
         when(imageService.imageContainsCat(any(), anyFloat())).thenReturn(true);
         BufferedImage catImage = new BufferedImage(1,1,1);
@@ -161,5 +153,60 @@ class SecurityServiceTest {
         verify(securityRepository, atMost(1)).setAlarmStatus(captor.capture());
         assertEquals(captor.getValue(),AlarmStatus.ALARM);
     }
+    /**
+     * 8. If the image service identifies an image that does not contain a cat,
+     * change the status to no alarm as long as the sensors are not active.
+     */
+    @Test
+    void whenImageNotCat_And_SensorsNotActive_Then_ChangeToNoAlarm(){
+        when(imageService.imageContainsCat(any(), anyFloat())).thenReturn(false);
+        Sensor sensorToActivate = (Sensor) (sensors.stream().toArray())[0];
 
+        sensorToActivate.setActive(false);
+        BufferedImage catImage = new BufferedImage(1,1,1);
+
+        securityService.processImage(catImage);
+
+        ArgumentCaptor<AlarmStatus> captor = ArgumentCaptor.forClass(AlarmStatus.class);
+        verify(securityRepository, atMost(1)).setAlarmStatus(captor.capture());
+        assertEquals(captor.getValue(),AlarmStatus.NO_ALARM);
+    }
+    /**
+     * 9. If the system is disarmed, set the status to no alarm.
+     */
+    @Test
+    void whenSystemDisArmed_Then_SetToNoAlarm(){
+      //  when (securityRepository.getArmingStatus()).thenReturn(ArmingStatus.DISARMED);
+
+        securityService.setArmingStatus(ArmingStatus.DISARMED);
+        ArgumentCaptor<AlarmStatus> captor = ArgumentCaptor.forClass(AlarmStatus.class);
+        verify(securityRepository, atMost(1)).setAlarmStatus(captor.capture());
+        assertEquals(captor.getValue(),AlarmStatus.NO_ALARM);
+    }
+    /**
+     * 10. If the system is armed, reset all sensors to inactive.
+     */
+    @ParameterizedTest
+    @EnumSource(value = ArmingStatus.class, names = {"ARMED_HOME", "ARMED_AWAY"})
+    void whenSystemArmed_Then_ResetSensorsToInactive(ArmingStatus armingStatus){
+        when (securityRepository.getSensors()).thenReturn(sensors);
+        securityService.setArmingStatus(armingStatus);
+        for (Sensor s: securityService.getSensors()) {
+            assertEquals(s.getActive(), false);
+        }
+    }
+
+    /**
+     * 11. If the system is armed-home while the camera shows a cat, set the alarm status to alarm.
+     */
+    @Test
+    void whenArmedHome_And_CameraShowsCat_Then_SetToAlarm(){
+        when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.ARMED_HOME);
+        when(imageService.imageContainsCat(any(), anyFloat())).thenReturn(true);
+        BufferedImage catImage = new BufferedImage(1,1,1);
+        securityService.processImage(catImage);
+        ArgumentCaptor<AlarmStatus> captor = ArgumentCaptor.forClass(AlarmStatus.class);
+        verify(securityRepository, atMost(1)).setAlarmStatus(captor.capture());
+        assertEquals(captor.getValue(),AlarmStatus.ALARM);
+    }
 }

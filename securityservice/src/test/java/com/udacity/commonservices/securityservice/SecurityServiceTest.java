@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -32,7 +31,7 @@ class SecurityServiceTest {
 
     @BeforeEach
     void init() {
-        securityService = new SecurityService(securityRepository,imageService);
+        securityService = new SecurityService(securityRepository, imageService);
     //    MockitoAnnotations.initMocks(this);
         Sensor sensorA = new Sensor("sensorA", SensorType.DOOR);
         Sensor sensorB = new Sensor("sensorB", SensorType.WINDOW);
@@ -103,18 +102,27 @@ class SecurityServiceTest {
     /**
      * 4. If alarm is active, change in sensor state should not affect the alarm state.
      */
-
-    @ParameterizedTest
-    @ValueSource(booleans={true,false})
-    void whenAlarmActive_Then_ChangeInSensorState_NotAffectAlarm(Boolean active){
-        when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.ALARM);
+    @Test
+    void whenAlarmActive_Then_ChangeInSensorState_NotAffectAlarm(){
         Sensor sensorToActivate = (Sensor) (sensors.stream().toArray())[0];
-        securityService.setAlarmStatus(AlarmStatus.ALARM);
-        securityService.changeSensorActivationStatus(sensorToActivate, active);
-        assertEquals(securityService.getAlarmStatus(), AlarmStatus.ALARM);
+        securityService.changeSensorActivationStatus(sensorToActivate, false);
+        verify(securityRepository, never()).setAlarmStatus(any());
+
+        when( securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.ALARM);
+        securityService.changeSensorActivationStatus(sensorToActivate, true);
+        verify(securityRepository, never()).setAlarmStatus(any());
+
         sensorToActivate.setActive(true);
-        securityService.changeSensorActivationStatus(sensorToActivate, active);
-        assertEquals(securityService.getAlarmStatus(), AlarmStatus.ALARM);
+        securityService.changeSensorActivationStatus(sensorToActivate, false);
+        verify(securityRepository, never()).setAlarmStatus(any());
+
+        securityService.changeSensorActivationStatus(sensorToActivate, true);
+        verify(securityRepository, never()).setAlarmStatus(any());
+
+
+
+//        assertEquals(captor.getValue(),AlarmStatus.ALARM);
+
     }
     /**
      * 5. If a sensor is activated while already active and the system is in pending state, change it to alarm state.

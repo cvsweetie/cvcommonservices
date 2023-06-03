@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class SecurityRepositoryImpl implements SecurityRepository {
-    private Set<Sensor> sensors = new HashSet();
+    private Set<Sensor> sensors = new HashSet<>();
     private AlarmStatus alarmStatus;
     private ArmingStatus armingStatus;
 
